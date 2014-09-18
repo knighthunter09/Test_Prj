@@ -1,5 +1,8 @@
 package com.app.activity;
 
+import org.apache.cordova.Config;
+import org.apache.cordova.CordovaActivity;
+
 import android.os.Bundle;
 import android.view.WindowManager;
 
