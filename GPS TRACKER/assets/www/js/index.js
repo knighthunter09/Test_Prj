@@ -3,7 +3,7 @@ var db;
 var pictureSource; // picture source
 var destinationType; // sets the format of returned value
 var defaultSMSNumber = 90845806; 
-var defaultSMSMessage = "This is the tracking message."
+var defaultSMSMessage = ""
 var states = {};
 var connectedToInternet = false;
 var lastUpdatedTimeStamp = "";
@@ -24,16 +24,16 @@ var app = {
     // Update DOM on a Received Event
     receivedEvent: function (id) {
         updateNetworkConnection();
-        db = window.openDatabase("ACNMobileDB", "1.0", "ACN Track Mobile Database", 10000000);
-        if(!window.localStorage.getItem("acnFirstRun")) {
+        db = window.openDatabase("MobileDB", "1.0", "Track Mobile Database", 10000000);
+        if(!window.localStorage.getItem("FirstRun")) {
         	db.transaction(populateDB, transactionError, transactionSuccessful);
         	//New: For two way messaging feature
             db.transaction(createInboxDB, transactionError, transactionSuccessful);
             
-        	window.localStorage.setItem("acnFirstRun", "true");
+        	window.localStorage.setItem("FirstRun", "true");
         }
-		Default_WS_IPaddress = window.localStorage.getItem("WS_IPaddress") ? window.localStorage.getItem("WS_IPaddress") : "SSIPODEV23.SSIPODEV.COM";
-		WS_IPaddress = window.localStorage.getItem("WS_IPaddress") ? window.localStorage.getItem("WS_IPaddress") : "SSIPODEV23.SSIPODEV.COM";
+		Default_WS_IPaddress = window.localStorage.getItem("WS_IPaddress") ? window.localStorage.getItem("WS_IPaddress") : "127.0.0.1";
+		WS_IPaddress = window.localStorage.getItem("WS_IPaddress") ? window.localStorage.getItem("WS_IPaddress") : "127.0.0.1";
 		
         pictureSource = navigator.camera.PictureSourceType;
         destinationType = navigator.camera.DestinationType;
@@ -75,7 +75,7 @@ function populateDB(tx) {
 
     tx.executeSql('DROP TABLE IF EXISTS TBL_LastGPS');
     tx.executeSql('CREATE TABLE IF NOT EXISTS TBL_LastGPS (GPS_Long varchar(30), GPS_Lat varchar(30))');
-    tx.executeSql('INSERT INTO TBL_LastGPS (GPS_Long, GPS_Lat) VALUES (?,?)', ["103.854207", "1.294410"]); //Default values for CITY HALL MRT
+    tx.executeSql('INSERT INTO TBL_LastGPS (GPS_Long, GPS_Lat) VALUES (?,?)', ["10", "1"]); //Default values for CITY HALL MRT
 }
 
 //New: For two way messaging feature
@@ -160,7 +160,7 @@ function deleteSuccess() {
 function updateDeviceId() {
             	        
         //Device related information
-        if (device.uuid && !window.localStorage.getItem("acnSavedUser")) {
+        if (device.uuid && !window.localStorage.getItem("SavedUser")) {
         	$("#device_id").attr("placeholder",device.uuid);
         	//Un-comment when requirement changes again
        		device_id = device.uuid;
@@ -169,9 +169,9 @@ function updateDeviceId() {
         	//$("#device_id").addClass('ui-disabled');
         	//$('#settings_saveDeviceID').addClass('ui-disabled');
         } else {
-        	$("#device_id").attr("placeholder",window.localStorage.getItem("acnSavedUser"));
+        	$("#device_id").attr("placeholder",window.localStorage.getItem("SavedUser"));
         	//Un-comment when requirement changes again
-       		device_id = window.localStorage.getItem("acnSavedUser");
+       		device_id = window.localStorage.getItem("SavedUser");
         }
         window.localStorage.getItem("WS_IPaddress") ? $("#ipAddress_WS").attr("placeholder",window.localStorage.getItem("WS_IPaddress")) : $("#ipAddress_WS").attr("placeholder","Please set IP address for the desired Web Service");
     }  
@@ -212,8 +212,8 @@ var tstmp = null;
 var imguri = null;
 var textdetail = null;
 var reportCategory = "Reporting";
-var WS_IPaddress = "SSIPODEV23.SSIPODEV.COM";
-var Default_WS_IPaddress = "SSIPODEV23.SSIPODEV.COM";
+var WS_IPaddress = "";
+var Default_WS_IPaddress = "";
 
 var refId;
 
@@ -305,7 +305,7 @@ function sendTrackingMessage(lastUpdatedMsgTime) {
             type: "POST",
             data: json_text_loc,
             dataType: "json",
-            url: "http://" + WS_IPaddress + "/Ops.MBSC.Service/TrackingService.svc/ReceieveTrackData",
+            url: "http://" + WS_IPaddress + "/",
             contentType: "application/json; charset=utf-8",
             success: function (msg) {
                 $("<li style=\"padding-left:15px;color:#000000;\"><p><b>" + "Tracking message sent on:</b><br>"   
@@ -427,7 +427,7 @@ function querySuccess(tx, results) {
                 type: "POST",
                 data: json_text_loc,
                 dataType: "text",
-                url: "http://" + WS_IPaddress + "/Ops.MBSC.Service/TrackingService.svc/ReceieveTrackData",
+                url: "http://" + WS_IPaddress + "/",
                 contentType: "application/json; charset=utf-8",
                 success: function (msg) {
                     deletePendingMessages(recordId, currentRec);
@@ -476,8 +476,8 @@ $(document).on('click', '#settings_saveDeviceID', function () {
         return;
     } else {
         device_id = tryid;
-        window.localStorage.setItem("acnSavedUser", device_id);
-        $("#device_id").attr("placeholder",window.localStorage.getItem("acnSavedUser"));
+        window.localStorage.setItem("SavedUser", device_id);
+        $("#device_id").attr("placeholder",window.localStorage.getItem("SavedUser"));
         element.innerHTML = "User ID is : <strong>" + device_id + "</strong>";
     }
 });
@@ -499,7 +499,7 @@ $(document).on('click', '#settings_saveipAddress', function () {
         type: "POST",
         data: {},
         dataType: "text",
-        url: "http://" + ipadd + "/Ops.MBSC.Service/TrackingService.svc/ServiceStatus",
+        url: "http://" + ipadd + "/",
         contentType: "application/json; charset=utf-8",
         success: function (msg) {
             var obj = jQuery.parseJSON(msg);
